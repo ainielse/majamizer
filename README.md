@@ -3,7 +3,7 @@ Region plug-in to clone an APEX session when opening in a new tab
 
 After installing the plug-in, please review the help and comments contained in the plug-in.
 
-You can use either the plug-in or the application process. You do not need both.
+You can use either the plug-in or the application process. You do not need both. **In both cases, use a server side condition so that it does not run on the login page.** It won't cause a big issue if it runs on the login page, but it will cause an unnecessary redirect on that page.
 
 ## Known Issues
 

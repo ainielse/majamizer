@@ -28,7 +28,7 @@ prompt APPLICATION 187 - THEE Full-On Clone
 -- Application Export:
 --   Application:     187
 --   Name:            THEE Full-On Clone
---   Date and Time:   16:53 Thursday August 12, 2021
+--   Date and Time:   16:59 Thursday August 12, 2021
 --   Exported By:     ANTON
 --   Flashback:       0
 --   Export Type:     Component Export
@@ -142,7 +142,7 @@ wwv_flow_api.create_plugin(
 '',
 '// after reloading the page, set the window name to be the APEX session',
 'else if (window.name == "NEW_SESSION"){',
-'    window.name = "&APP_SESSION.";',
+'    window.name = "'' || :APP_SESSION ||''";',
 '}',
 '</script>    ',
 ''');',

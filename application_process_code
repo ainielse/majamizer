@@ -1,0 +1,73 @@
+declare
+
+-- helper function to get the URL that includes APEX_CLONE_SESSION
+-- note: currently does NOT support friendly URLs
+function get_clone_url return varchar2 as
+
+    -- l_query_string will include everything after f? (e.g. p=123:44:32438298653:::RP:P44_ID:%5C9999%5C&cs=3iasdfufda923223dja93)
+    l_query_string  varchar2(4000) := owa_util.get_cgi_env('QUERY_STRING');
+    l_url           varchar2(4000);
+    l_third_position    number;
+
+begin
+
+   htp.p('l_query_string: ' || l_query_string);
+
+    -- throw away the checksum
+    l_query_string := regexp_replace(l_query_string, '&cs=(.*)', null);
+
+    -- APEX converts \ to %5C in URLs. Change %5C back to \.
+    l_query_string := replace(l_query_string, '%5C', '\');
+
+    -- Commas need to change back from %2C to ,.
+    l_query_string := replace(l_query_string, '%2C', ',');
+
+     -- Spaces need to change back from + to a space.
+    l_query_string := replace(l_query_string, '+', ' ');   
+
+    -- if :REQUEST is not null, throw it away as we assume it has already done what it should do
+    if :REQUEST is not null then
+      l_query_string := replace(l_query_string, ':' || :REQUEST ||':', '::'); 
+    end if;
+
+    -- inject APEX_CLONE_SESSION
+    -- find the third colon and add APEX_CLONE_SESSION
+    
+    l_third_position := instr(l_query_string, ':', 1, 3);
+    
+    -- inject APEX_CLONE_SESSION and add the checksum using apex_util.prepare_url
+    l_url := apex_util.prepare_url(
+                'f?' || substr(l_query_string, 1, l_third_position) 
+                || 'APEX_CLONE_SESSION' || substr(l_query_string, l_third_position + 1)
+            );
+
+    return l_url;
+end get_clone_url;
+
+--
+--
+-- main procedure
+
+begin
+
+    if apex_page.get_page_mode(:APP_ID, :APP_PAGE_ID) = 'NORMAL' then
+
+        htp.p('
+<script>
+
+// reload the page if in a new window or tab
+if (window.name == null || window.name == "") {
+    window.name = "NEW_SESSION";
+    window.location.replace("' || get_clone_url ||'");
+}
+
+// after reloading the page, set the window name to be the APEX session
+else if (window.name == "NEW_SESSION"){
+    window.name = "&APP_SESSION.";
+}
+</script>    
+');
+
+    end if;
+
+end;

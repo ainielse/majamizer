@@ -11,8 +11,6 @@ function get_clone_url return varchar2 as
 
 begin
 
-   htp.p('l_query_string: ' || l_query_string);
-
     -- throw away the checksum
     l_query_string := regexp_replace(l_query_string, '&cs=(.*)', null);
 

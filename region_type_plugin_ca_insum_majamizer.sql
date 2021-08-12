@@ -28,7 +28,7 @@ prompt APPLICATION 187 - THEE Full-On Clone
 -- Application Export:
 --   Application:     187
 --   Name:            THEE Full-On Clone
---   Date and Time:   15:05 Thursday August 12, 2021
+--   Date and Time:   16:53 Thursday August 12, 2021
 --   Exported By:     ANTON
 --   Flashback:       0
 --   Export Type:     Component Export
@@ -64,8 +64,6 @@ wwv_flow_api.create_plugin(
 '',
 'begin',
 '',
-'   htp.p(''l_query_string: '' || l_query_string);',
-'',
 '    -- throw away the checksum',
 '    l_query_string := regexp_replace(l_query_string, ''&cs=(.*)'', null);',
 '',
@@ -78,7 +76,7 @@ wwv_flow_api.create_plugin(
 '     -- Spaces need to change back from + to a space.',
 '    l_query_string := replace(l_query_string, ''+'', '' '');   ',
 '',
-'    -- if :REQUEST is not null, throw it away as we assum it has already done what it should do',
+'    -- if :REQUEST is not null, throw it away as we assume it has already done what it should do',
 '    if :REQUEST is not null then',
 '      l_query_string := replace(l_query_string, '':'' || :REQUEST ||'':'', ''::''); ',
 '    end if;',

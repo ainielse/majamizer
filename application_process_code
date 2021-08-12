@@ -61,7 +61,7 @@ if (window.name == null || window.name == "") {
 
 // after reloading the page, set the window name to be the APEX session
 else if (window.name == "NEW_SESSION"){
-    window.name = "&APP_SESSION.";
+    window.name = "' || :APP_SESSION || '";
 }
 </script>    
 ');

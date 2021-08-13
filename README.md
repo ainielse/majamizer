@@ -3,6 +3,8 @@ Region plug-in to clone an APEX session when opening in a new tab
 
 After installing the plug-in, please review the help and comments contained in the plug-in.
 
+You should create an on page load dynamic action on the login page that sets the window.name. See the plug-in help for more info.
+
 You can use either the plug-in or the application process. You do not need both. **In both cases, use a server side condition so that it does not run on the login page.** It won't cause a big issue if it runs on the login page, but it will cause an unnecessary redirect on that page.
 
 Note: this plug-in (or code) handles applications that use Session State Protection (SSP - Checksums in the URL). This can be greatly simplified if you application does not use SSP.

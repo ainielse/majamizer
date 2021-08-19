@@ -1,6 +1,6 @@
 declare
 
--- helper function to get the URL that includes APEX_CLONE_SESSION
+-- get the URL that includes APEX_CLONE_SESSION
 -- note: currently does NOT support friendly URLs
 function get_clone_url return varchar2 as
 
@@ -9,7 +9,10 @@ function get_clone_url return varchar2 as
     l_url           varchar2(4000);
     l_third_position    number;
 
+    l_debug_template    varchar2(4000) := 'majamizer plug-in : get_clone_url > %0 %1 %2 %3 %4';
 begin
+
+    apex_debug.message(l_debug_template, 'Start');
 
     -- throw away the checksum
     l_query_string := regexp_replace(l_query_string, '&cs=(.*)', null);
@@ -23,9 +26,13 @@ begin
      -- Spaces need to change back from + to a space.
     l_query_string := replace(l_query_string, '+', ' ');   
 
+    apex_debug.message(l_debug_template, 'l_query_string before REQUEST', l_query_string);
+
     -- if :REQUEST is not null, throw it away as we assume it has already done what it should do
     if :REQUEST is not null then
       l_query_string := replace(l_query_string, ':' || :REQUEST ||':', '::'); 
+
+      apex_debug.message(l_debug_template, 'l_query_string inside REQUEST', 'REQUEST', :REQUEST, 'l_query_string', l_query_string );
     end if;
 
     -- inject APEX_CLONE_SESSION
@@ -33,11 +40,26 @@ begin
     
     l_third_position := instr(l_query_string, ':', 1, 3);
     
-    -- inject APEX_CLONE_SESSION and add the checksum using apex_util.prepare_url
-    l_url := apex_util.prepare_url(
-                'f?' || substr(l_query_string, 1, l_third_position) 
-                || 'APEX_CLONE_SESSION' || substr(l_query_string, l_third_position + 1)
-            );
+    -- sometimes the URL will only have f?p=123:456:2343234 or f?p=123:456
+    -- handle these special cases
+    if l_third_position = 0 then
+        if instr(l_query_string, ':', 1, 2) > 0 then 
+            -- inject APEX_CLONE_SESSION and add the checksum using apex_util.prepare_url
+            l_url := apex_util.prepare_url('f?' || l_query_string|| ':APEX_CLONE_SESSION');
+        else
+            l_url := apex_util.prepare_url('f?' || l_query_string|| '::APEX_CLONE_SESSION');
+        end if;
+    else
+
+        -- inject APEX_CLONE_SESSION and add the checksum using apex_util.prepare_url
+        l_url := apex_util.prepare_url(
+                    'f?' || substr(l_query_string, 1, l_third_position) 
+                    || 'APEX_CLONE_SESSION' || substr(l_query_string, l_third_position + 1)
+                );
+
+    end if;
+
+    apex_debug.message(l_debug_template, 'l_url', l_url);        
 
     return l_url;
 end get_clone_url;

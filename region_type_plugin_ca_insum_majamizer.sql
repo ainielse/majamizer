@@ -28,7 +28,7 @@ prompt APPLICATION 187 - THEE Full-On Clone
 -- Application Export:
 --   Application:     187
 --   Name:            THEE Full-On Clone
---   Date and Time:   16:59 Thursday August 12, 2021
+--   Date and Time:   15:54 Thursday August 19, 2021
 --   Exported By:     ANTON
 --   Flashback:       0
 --   Export Type:     Component Export
@@ -62,7 +62,10 @@ wwv_flow_api.create_plugin(
 '    l_url           varchar2(4000);',
 '    l_third_position    number;',
 '',
+'    l_debug_template    varchar2(4000) := ''majamizer plug-in : get_clone_url > %0 %1 %2 %3 %4'';',
 'begin',
+'',
+'    apex_debug.message(l_debug_template, ''Start'');',
 '',
 '    -- throw away the checksum',
 '    l_query_string := regexp_replace(l_query_string, ''&cs=(.*)'', null);',
@@ -76,9 +79,13 @@ wwv_flow_api.create_plugin(
 '     -- Spaces need to change back from + to a space.',
 '    l_query_string := replace(l_query_string, ''+'', '' '');   ',
 '',
+'    apex_debug.message(l_debug_template, ''l_query_string before REQUEST'', l_query_string);',
+'',
 '    -- if :REQUEST is not null, throw it away as we assume it has already done what it should do',
 '    if :REQUEST is not null then',
 '      l_query_string := replace(l_query_string, '':'' || :REQUEST ||'':'', ''::''); ',
+'',
+'      apex_debug.message(l_debug_template, ''l_query_string inside REQUEST'', ''REQUEST'', :REQUEST, ''l_query_string'', l_query_string );',
 '    end if;',
 '',
 '    -- inject APEX_CLONE_SESSION',
@@ -86,11 +93,26 @@ wwv_flow_api.create_plugin(
 '    ',
 '    l_third_position := instr(l_query_string, '':'', 1, 3);',
 '    ',
-'    -- inject APEX_CLONE_SESSION and add the checksum using apex_util.prepare_url',
-'    l_url := apex_util.prepare_url(',
-'                ''f?'' || substr(l_query_string, 1, l_third_position) ',
-'                || ''APEX_CLONE_SESSION'' || substr(l_query_string, l_third_position + 1)',
-'            );',
+'    -- sometimes the URL will only have f?p=123:456:2343234 or f?p=123:456',
+'    -- handle these special cases',
+'    if l_third_position = 0 then',
+'        if instr(l_query_string, '':'', 1, 2) > 0 then ',
+'            -- inject APEX_CLONE_SESSION and add the checksum using apex_util.prepare_url',
+'            l_url := apex_util.prepare_url(''f?'' || l_query_string|| '':APEX_CLONE_SESSION'');',
+'        else',
+'            l_url := apex_util.prepare_url(''f?'' || l_query_string|| ''::APEX_CLONE_SESSION'');',
+'        end if;',
+'    else',
+'',
+'        -- inject APEX_CLONE_SESSION and add the checksum using apex_util.prepare_url',
+'        l_url := apex_util.prepare_url(',
+'                    ''f?'' || substr(l_query_string, 1, l_third_position) ',
+'                    || ''APEX_CLONE_SESSION'' || substr(l_query_string, l_third_position + 1)',
+'                );',
+'',
+'    end if;',
+'',
+'    apex_debug.message(l_debug_template, ''l_url'', l_url);        ',
 '',
 '    return l_url;',
 'end get_clone_url;',
@@ -118,7 +140,10 @@ wwv_flow_api.create_plugin(
 '    --perform escaping',
 '    l_region_id_esc p_region.static_id%type    := apex_escape.html_attribute(l_region_id);',
 '',
+'    l_debug_template    varchar2(4000) := ''majamizer plug-in : majamizer > %0 %1 %2 %3 %4'';',
 'begin',
+'',
+'    apex_debug.message(l_debug_template, ''Start'');',
 '',
 '    --debug',
 '    if apex_application.g_debug ',
@@ -130,6 +155,7 @@ wwv_flow_api.create_plugin(
 '    end if;',
 '',
 '    if apex_page.get_page_mode(:APP_ID, :APP_PAGE_ID) = ''NORMAL'' then',
+'        apex_debug.message(l_debug_template, ''Page is NORMAL'');',
 '',
 '        htp.p(''',
 '<script>',
@@ -144,11 +170,14 @@ wwv_flow_api.create_plugin(
 'else if (window.name == "NEW_SESSION"){',
 '    window.name = "'' || :APP_SESSION ||''";',
 '}',
+'',
 '</script>    ',
 ''');',
 '',
 '    end if;',
 '    ',
+'    apex_debug.message(l_debug_template, ''End'');',
+'',
 '    return l_result;',
 'end majamizer;'))
 ,p_api_version=>2
@@ -167,7 +196,8 @@ wwv_flow_api.create_plugin(
 '<p>*** This region should have a Server Side Condition that excludes the login page. *** </p>',
 '<p>*** Note: This plug-in does NOT support friendly URLs.</p>',
 '<p>*** If :REQUEST is not null, the value will be replaced with APEX_CLONE_SESSION. Pages that have :REQUEST not null will create a new session but the REQUEST value will not be passed to the new session. Hence, the page will run once in the current '
-||'session with the REQUEST value passed on the URL. It will then reload in a new session without passing the REQUEST value to the new session.***</p>'))
+||'session with the REQUEST value passed on the URL. It will then reload in a new session without passing the REQUEST value to the new session.***</p>',
+'<p>*** Note: If you wish to open a new window but NOT have this plug-in create a new session, open the window with a window name. Alternatively, use a server side condition to not render this plugin on that page.</p>'))
 ,p_version_identifier=>'0.1'
 ,p_plugin_comment=>'This plug-in could have been created as a dynamic action plug-in to be used On Page Load. On Page Load dynamic actions, however, run after the page fully renders. By implementing this as a region plug-in and placing it in the Page Header region locat'
 ||'ion, the page reloads prior to rendering anything. Please see the Help Text for additional plug-in considerations. This plug-in attempts to clean up the URL, but many special characters are not handled. It is advisable to only pass numbers on the URL'
